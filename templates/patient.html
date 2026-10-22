@@ -1,0 +1,439 @@
+
+{% extends "base.html" %}
+{% block title %}Patient Dashboard | MediCare+{% endblock %}
+
+{% block content %}
+
+<section class="dashboard-header">
+    <p class="eyebrow">PATIENT PORTAL</p>
+    <h1>My Appointments</h1>
+    <p>Book a consultation or check your existing appointments.</p>
+</section>
+
+<section class="panel">
+    <h2>Book an Appointment</h2>
+    <p class="muted">
+        Select a doctor and date to check the actual time-slot availability.
+    </p>
+
+    <div class="booking-grid">
+        {% for doctor in doctors %}
+        <article class="doctor-card">
+            <div class="doctor-avatar">⚕</div>
+
+            <h3>{{ doctor.name }}</h3>
+            <p class="specialty">{{ doctor.specialization }}</p>
+            <p>{{ doctor.experience }} years of experience</p>
+            <p class="fee">Fee: ₹{{ doctor.fee }}</p>
+
+            {% if doctor.review_count %}
+            <p class="doctor-rating">
+                ⭐ {{ "%.1f"|format(doctor.average_rating) }}
+                <span class="muted">({{ doctor.review_count }} reviews)</span>
+            </p>
+            {% else %}
+            <p class="muted">No patient reviews yet</p>
+            {% endif %}
+
+            <form method="POST"
+                  action="{{ url_for('patient_dashboard') }}"
+                  class="patient-booking-form">
+
+                <input type="hidden" name="doctor_id" value="{{ doctor.id }}">
+
+                <label>Appointment Date</label>
+                <input type="date"
+                       name="appointment_date"
+                       min="{{ today }}"
+                       class="appointment-date"
+                       required>
+
+                <label>Time Slot Availability</label>
+                <div class="slot-message muted">
+                    Select a date to view the doctor's time slots.
+                </div>
+
+                <div class="patient-slot-list">
+                    <p class="muted">No date selected.</p>
+                </div>
+
+                <input type="hidden"
+                       name="appointment_time"
+                       class="selected-appointment-time"
+                       value="">
+
+                <button type="submit"
+                        class="btn full-width booking-submit"
+                        disabled>
+                    Select an Available Slot
+                </button>
+            </form>
+        </article>
+        {% else %}
+        <p>No doctors are currently available.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Appointment History</h2>
+
+    {% if appointments %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Specialization</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for a in appointments %}
+                <tr>
+                    <td>{{ a.doctor_name }}</td>
+                    <td>{{ a.specialization }}</td>
+                    <td>{{ a.appointment_date }}</td>
+                    <td>{{ a.appointment_time }}</td>
+                    <td>
+                        <span class="status">{{ a.status }}</span>
+                    </td>
+                    <td>
+                        {% if a.status not in ['Cancelled', 'Rejected', 'Completed'] %}
+                        <form method="POST"
+                              action="{{ url_for('cancel_appointment', appointment_id=a.id) }}">
+                            <button class="btn btn-danger" type="submit">
+                                Cancel
+                            </button>
+                        </form>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% if a.status == 'Completed' %}
+                <tr>
+                    <td colspan="6">
+                        <div class="patient-review-panel">
+                            {% if a.review_id %}
+                            <h3>Your Review</h3>
+                            <p class="review-stars">
+                                {% for star in range(1, 6) %}
+                                    {% if star <= a.review_rating %}★{% else %}☆{% endif %}
+                                {% endfor %}
+                                <span>{{ a.review_rating }}/5</span>
+                            </p>
+                            <p>{{ a.review_text }}</p>
+                            <p class="muted">You have already reviewed this appointment.</p>
+                            {% else %}
+                            <h3>Rate Your Experience</h3>
+                            <p class="muted">
+                                How was your consultation with Dr. {{ a.doctor_name }}?
+                            </p>
+
+                            <form method="POST"
+                                  action="{{ url_for('submit_patient_review', appointment_id=a.id) }}"
+                                  class="patient-review-form">
+
+                                <label for="rating-{{ a.id }}">Your Rating</label>
+                                <select id="rating-{{ a.id }}"
+                                        name="rating"
+                                        required>
+                                    <option value="">Select stars</option>
+                                    <option value="5">★★★★★ — Excellent</option>
+                                    <option value="4">★★★★ — Very good</option>
+                                    <option value="3">★★★ — Good</option>
+                                    <option value="2">★★ — Fair</option>
+                                    <option value="1">★ — Poor</option>
+                                </select>
+
+                                <label for="review-{{ a.id }}">Your Review</label>
+                                <textarea id="review-{{ a.id }}"
+                                          name="review_text"
+                                          rows="3"
+                                          maxlength="1000"
+                                          placeholder="Share your experience with the doctor..."
+                                          required></textarea>
+
+                                <button type="submit" class="btn">
+                                    Submit Review
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="muted">
+        No appointments yet. Book your first consultation above.
+    </p>
+    {% endif %}
+</section>
+
+<style>
+    .patient-slot-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 12px 0;
+    }
+
+    .patient-slot {
+        border: 1px solid #d7dce2;
+        border-radius: 8px;
+        padding: 10px;
+        background: #fff;
+        color: #333;
+        text-align: left;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .patient-slot:disabled {
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
+
+    .patient-slot.available {
+        border-color: #198754;
+        color: #146c43;
+    }
+
+    .patient-slot.available.selected {
+        background: #198754;
+        color: #fff;
+    }
+
+    .patient-slot.booked {
+        background: #f1f1f1;
+        color: #666;
+    }
+
+    .patient-slot.unavailable {
+        background: #fff0f0;
+        color: #a12626;
+        border-color: #e5bcbc;
+    }
+
+    .slot-status {
+        display: block;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    .booking-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .doctor-rating {
+        margin: 8px 0 14px;
+        color: #a66a00;
+        font-weight: 600;
+    }
+
+    .patient-review-panel {
+        padding: 18px;
+        margin: 6px 0;
+        border: 1px solid #dce8e8;
+        border-radius: 12px;
+        background: #f7fbfb;
+    }
+
+    .patient-review-panel h3 {
+        margin-top: 0;
+    }
+
+    .patient-review-form {
+        display: grid;
+        gap: 10px;
+        max-width: 550px;
+    }
+
+    .patient-review-form select,
+    .patient-review-form textarea {
+        width: 100%;
+        padding: 11px;
+        border: 1px solid #ccd5dc;
+        border-radius: 8px;
+        font: inherit;
+        box-sizing: border-box;
+    }
+
+    .patient-review-form textarea {
+        resize: vertical;
+    }
+
+    .patient-review-form button {
+        justify-self: start;
+    }
+
+    .review-stars {
+        color: #d99a00;
+        font-size: 24px;
+        margin: 5px 0;
+    }
+
+    .review-stars span {
+        color: #333;
+        font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+        .patient-slot-list {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".patient-booking-form").forEach(function (form) {
+        const doctorInput = form.querySelector('input[name="doctor_id"]');
+        const dateInput = form.querySelector(".appointment-date");
+        const slotList = form.querySelector(".patient-slot-list");
+        const message = form.querySelector(".slot-message");
+        const selectedTime = form.querySelector(".selected-appointment-time");
+        const submitButton = form.querySelector(".booking-submit");
+
+        let requestNumber = 0;
+
+        function clearSlots(text) {
+            slotList.replaceChildren();
+
+            const note = document.createElement("p");
+            note.className = "muted";
+            note.textContent = text;
+            slotList.appendChild(note);
+
+            selectedTime.value = "";
+            submitButton.disabled = true;
+        }
+
+        function selectSlot(button, slotTime) {
+            slotList.querySelectorAll(".patient-slot").forEach(function (slot) {
+                slot.classList.remove("selected");
+            });
+
+            button.classList.add("selected");
+            selectedTime.value = slotTime;
+            submitButton.disabled = false;
+            submitButton.textContent = "Book " + button.dataset.label;
+        }
+
+        async function loadSlots() {
+            const currentRequest = ++requestNumber;
+            selectedTime.value = "";
+            submitButton.disabled = true;
+            submitButton.textContent = "Select an Available Slot";
+
+            const doctorId = doctorInput.value;
+            const appointmentDate = dateInput.value;
+
+            if (!appointmentDate) {
+                message.textContent = "Select a date to view the doctor's time slots.";
+                clearSlots("No date selected.");
+                return;
+            }
+
+            message.textContent = "Checking availability...";
+            clearSlots("Loading time slots...");
+
+            try {
+                const url = "{{ url_for('patient_slot_availability') }}"
+                    + "?doctor_id=" + encodeURIComponent(doctorId)
+                    + "&appointment_date=" + encodeURIComponent(appointmentDate);
+
+                const response = await fetch(url, {
+                    headers: { "Accept": "application/json" }
+                });
+
+                const data = await response.json();
+
+                if (currentRequest !== requestNumber) {
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Could not load availability.");
+                }
+
+                slotList.replaceChildren();
+
+                if (!data.slots || data.slots.length === 0) {
+                    clearSlots(data.message || "No time slots are available.");
+                    message.textContent = data.message || "No slots available.";
+                    return;
+                }
+
+                data.slots.forEach(function (slot) {
+                    const button = document.createElement("button");
+                    button.type = "button";
+                    button.className = "patient-slot";
+
+                    const status = slot.status;
+                    const label = slot.label || slot.time;
+                    button.dataset.label = label;
+
+                    const timeText = document.createElement("strong");
+                    timeText.textContent = label;
+
+                    const statusText = document.createElement("span");
+                    statusText.className = "slot-status";
+                    statusText.textContent = status;
+
+                    button.appendChild(timeText);
+                    button.appendChild(statusText);
+
+                    if (status === "Available") {
+                        button.classList.add("available");
+                        button.addEventListener("click", function () {
+                            selectSlot(button, slot.time);
+                        });
+                    } else {
+                        button.disabled = true;
+                        button.classList.add(
+                            status === "Booked" ? "booked" : "unavailable"
+                        );
+                    }
+
+                    slotList.appendChild(button);
+                });
+
+                message.textContent = data.message
+                    || "Select any slot marked Available.";
+
+            } catch (error) {
+                if (currentRequest !== requestNumber) {
+                    return;
+                }
+
+                clearSlots("Availability could not be loaded.");
+                message.textContent = error.message
+                    || "Could not load availability.";
+            }
+        }
+
+        dateInput.addEventListener("change", loadSlots);
+
+        form.addEventListener("submit", function (event) {
+            if (!selectedTime.value) {
+                event.preventDefault();
+                message.textContent = "Please select a slot marked Available.";
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

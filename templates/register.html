@@ -1,0 +1,58 @@
+
+{% extends "base.html" %}
+{% block title %}Register | MediCare+{% endblock %}
+
+{% block content %}
+<section class="form-section">
+    <div class="form-card">
+        <p class="eyebrow">JOIN MEDICARE+</p>
+        <h1>Create Your Account</h1>
+        <p>Register to book appointments with our doctors.</p>
+
+        <form method="POST" action="{{ url_for('register') }}">
+            <label for="name">Full Name</label>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Enter your full name"
+                required
+            >
+
+            <label for="email">Email Address</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+            >
+
+            <label for="phone">Phone Number (Optional)</label>
+            <input
+                type="tel"
+                id="phone"
+                name="phone"
+                placeholder="Enter your phone number"
+                autocomplete="tel"
+            >
+
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="At least 6 characters"
+                minlength="6"
+                required
+            >
+
+            <button type="submit" class="btn">Create Account</button>
+        </form>
+
+        <p>Already have an account?
+            <a href="{{ url_for('login') }}">Login here</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

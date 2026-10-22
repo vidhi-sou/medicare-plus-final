@@ -1,0 +1,28 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Local databases and backups
+*.db
+*.sqlite
+*.sqlite3
+
+# Local backup files
+app_backup.py
+app_sqlite_backup.py
+templates/home_backup.html
+
+# Local testing and migration helpers
+app copy.py
+inspect_db.py
+migrate_to_neon.py
+reset_rahul_password.py

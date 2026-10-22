@@ -1,0 +1,51 @@
+
+{% extends "base.html" %}
+{% block title %}Login | MediCare+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div class="form-card">
+        <div class="form-icon">⚕</div>
+
+        <h2>Welcome Back</h2>
+        <p class="muted">Log in to manage your appointments.</p>
+
+        <form method="POST">
+            <label for="identifier">Email Address or Phone Number</label>
+            <input
+                type="text"
+                id="identifier"
+                name="identifier"
+                placeholder="Enter your email or phone number"
+                autocomplete="username"
+                required
+            >
+
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+            >
+
+            <div style="text-align: right; margin: 10px 0 18px;">
+                <a href="{{ url_for('forgot_password') }}">
+                    Forgot Password?
+                </a>
+            </div>
+
+            <button type="submit" class="btn full-width">
+                Login
+            </button>
+        </form>
+
+        <p class="form-bottom">
+            New patient?
+            <a href="{{ url_for('register') }}">Create an account</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

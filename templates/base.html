@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="google-site-verification" content="tbPeQqUYV3fMWjz_WJjY7Hr785huKb0OvL_qDOWd9R0" />
+
+    <meta name="description" content="Book doctor appointments online with MediCare+. Explore doctors, check available time slots, manage appointments, and access a simple healthcare booking system." />
+
+    <title>{% block title %}MediCare+ | Online Doctor Appointment Booking{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            color: #087f8c;
+            font-size: 25px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* Normal navigation links */
+        .nav-links > a:not(.btn) {
+            color: #334155;
+            background: transparent;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 9px 14px;
+            border-radius: 9px;
+        }
+
+        /* Hover effect */
+        .nav-links > a:not(.btn):hover {
+            background: #e6f7f8;
+            color: #087f8c;
+        }
+
+        /* Active Home or Login link */
+        .nav-links > a.active:not(.btn) {
+            background: #087f8c;
+            color: white;
+        }
+
+        .welcome {
+            background: #e6f7f8;
+            color: #087f8c;
+            padding: 9px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        /* Register is transparent by default */
+        .nav-links > a.btn {
+            display: inline-block;
+            background: transparent;
+            color: #334155;
+            border: 2px solid transparent;
+            border-radius: 9px;
+            padding: 10px 18px;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Register hover */
+        .nav-links > a.btn:hover {
+            background: #e6f7f8;
+            color: #087f8c;
+            border-color: transparent;
+        }
+
+        /* Register is blue only on its own page */
+        .nav-links > a.btn.active {
+            background: #087f8c;
+            color: white;
+            border-color: #087f8c;
+        }
+
+        .nav-links > a.btn.active:hover {
+            background: #066773;
+            color: white;
+            border-color: #066773;
+        }
+
+        /* Logout button */
+        .nav-links > a.btn-outline {
+            background: white;
+            color: #087f8c;
+            border: 2px solid #087f8c;
+        }
+
+        .nav-links > a.btn-outline:hover {
+            background: #087f8c;
+            color: white;
+        }
+
+        .flash {
+            margin: 15px 0;
+            padding: 12px 16px;
+            background: #e6f7f8;
+            color: #075985;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 650px) {
+            .navbar {
+                align-items: flex-start;
+            }
+
+            .nav-links {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="{{ url_for('home') }}" class="logo">MediCare+</a>
+
+            <div class="nav-links">
+                <a href="{{ url_for('home') }}"
+                   class="{% if request.endpoint == 'home' %}active{% endif %}">
+                    Home
+                </a>
+
+                {% if session.get('role') == 'patient' %}
+                    <a href="{{ url_for('patient_dashboard') }}">My Appointments</a>
+                {% elif session.get('role') == 'doctor' %}
+                    <a href="{{ url_for('doctor_dashboard') }}">Doctor Dashboard</a>
+                {% elif session.get('role') == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+                {% endif %}
+
+                {% if session.get('user_id') %}
+                    <span class="welcome">
+                        Hi, {{ session.get('name', 'User') }}
+                    </span>
+
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline">
+                        Logout
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}"
+                       class="{% if request.endpoint == 'login' %}active{% endif %}">
+                        Login
+                    </a>
+
+                    <a href="{{ url_for('register') }}"
+                       class="btn {% if request.endpoint == 'register' %}active{% endif %}">
+                        Register
+                    </a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>© 2026 MediCare+ | Doctor Appointment Management System</p>
+    </footer>
+</body>
+</html>
